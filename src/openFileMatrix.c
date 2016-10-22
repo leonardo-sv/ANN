@@ -1,3 +1,6 @@
+//Desenvolvido por: Leonardo de Souza Vieira
+//início 20/10/2016 fim: ....
+
 #include "../include/openMatrixFile.h"
 
 double** createMatrix(int rows, int columns){

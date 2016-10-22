@@ -1,6 +1,8 @@
+//Desenvolvedor: Leonardo de Souza Vieira
+//Data: 20/10/2016
+
 #include "../include/mlp.h"
 #include "../include/openMatrixFile.h"
-
 
 Neuron *initNeuronRandom(int links, double a){
   Neuron *new;
@@ -8,7 +10,7 @@ Neuron *initNeuronRandom(int links, double a){
 
   new = malloc(sizeof(Neuron));
   new->num_weigths = links;
-  new->activation = a;
+  new->a = a;
   new->error = 0.0;
   if(links != 0){
     new->weights =  malloc(sizeof(double) * links);
@@ -94,11 +96,14 @@ void freeMLP(MLP *mlp){
 void setErrorNeuron(double value, Neuron *n){
   n->error = value;
 }
-void setActivationNeuron(double value, Neuron *n){
-  n->activation = value;
+void setActivationNeuron(Neuron *n, double value){
+  // printf("%f\n",n->a);
+  // printf("%f\n",value);
+  n->a = value;
+  // printf("%f\n",n->a);
 }
 
-void setWeigthsNeuron(double *values, Neuron *n){
+void setWeigthsNeuron(Neuron *n, double *values){
   int i;
   for(i = 0;i < n->num_weigths;i++)
     n->weights[i] = values[i];
@@ -106,7 +111,7 @@ void setWeigthsNeuron(double *values, Neuron *n){
 }
 
 void printNeuron(Neuron *n){
-  printf("%2.3f\n\n",n->activation);
+  printf("%2.3f\n\n",n->a);
 }
 
 
@@ -123,7 +128,7 @@ void printNeuronWeights(Neuron *n){
 void setLayer(Layer *l, double *values){
   int i;
   for(i = 0; i < l->size;i++){
-     setActivationNeuron(values[i],l->neurons[i]);
+     setActivationNeuron(l->neurons[i], values[i]);
   }
 
 }
@@ -162,6 +167,55 @@ void printValuesMLP(MLP *mlp){
   printf("\n---------End---------------\n");
 }
 
+
+void forwardPropagation(MLP *mlp){
+  int i,j, k;
+  double result = 0.0, b = 0.0;
+
+  //primeira camada escondida
+  for(i = 0; i < mlp->size_hidden;i++){
+    b = (mlp->input_layer->bias->a) * (mlp->input_layer->bias->weights[i]);
+
+    for(j = 0; j < mlp->size_in;j++)
+      result = result + (((mlp->input_layer->neurons[j])->a) * ((mlp->input_layer->neurons[j])->weights[i]));
+
+    result = result + b;
+
+    setActivationNeuron(mlp->hidden_layers[0]->neurons[i], result);
+    result = 0.0;
+
+  }
+  //as camadas escondidas restantes começando da segunda camada k = 1
+  for(k = 1; k< mlp->num_hiddens;k++){
+    for(i = 0; i < mlp->size_hidden;i++){
+      b = (mlp->hidden_layers[k - 1]->bias->a) * (mlp->hidden_layers[k -1]->bias->weights[i]);
+
+      for(j = 0; j < mlp->size_hidden;j++)
+        result = result + (((mlp->hidden_layers[k -1]->neurons[j])->a) * ((mlp->hidden_layers[k -1]->neurons[j])->weights[i]));
+
+      result = result + b;
+
+      setActivationNeuron(mlp->hidden_layers[k]->neurons[i], result);
+      result = 0.0;
+
+    }
+  }
+  k = mlp->num_hiddens -1;
+  //camada de saída
+  for(i = 0; i < mlp->size_out;i++){
+    b = (mlp->hidden_layers[k]->bias->a) * (mlp->hidden_layers[k]->bias->weights[i]);
+
+    for(j = 0; j < mlp->size_hidden;j++)
+     result = result + (((mlp->hidden_layers[k]->neurons[j])->a) * ((mlp->hidden_layers[k]->neurons[j])->weights[i]));
+
+    result = result + b;
+
+    setActivationNeuron(mlp->output_layer->neurons[i], result);
+    result = 0.0;
+  }
+
+}
+
 main() {
   int i;
 
@@ -171,7 +225,8 @@ main() {
 
   readFileMatrix(mat, NUM_ROWS, NUM_COLUMNS);
   setLayer(mlp->input_layer,mat[0]);
-
+  forwardPropagation(mlp);
+  //printLayerWeights(mlp->input_layer);
   printValuesMLP(mlp);
   //printMatrix(mat, NUM_ROWS, NUM_COLUMNS);
 
