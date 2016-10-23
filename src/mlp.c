@@ -249,6 +249,14 @@ void forwardPropagation(MLP *mlp){
 //
 // }
 
+void backPropagation(MLP *mlp){
+  int i;
+  for(i = 0; i < M; i++){
+
+  }
+
+}
+
 main() {
   int i;
 
