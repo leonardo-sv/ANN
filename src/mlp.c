@@ -167,54 +167,87 @@ void printValuesMLP(MLP *mlp){
   printf("\n---------End---------------\n");
 }
 
-
-void forwardPropagation(MLP *mlp){
+void layerForwardPropagation(Layer *back_layer, Layer *current_layer){
   int i,j, k;
   double result = 0.0, b = 0.0;
 
-  //primeira camada escondida
-  for(i = 0; i < mlp->size_hidden;i++){
-    b = (mlp->input_layer->bias->a) * (mlp->input_layer->bias->weights[i]);
+  //camada forwardPropagation
+  for(i = 0; i < current_layer->size;i++){
+    b = (back_layer->bias->a) * (back_layer->bias->weights[i]);
 
-    for(j = 0; j < mlp->size_in;j++)
-      result = result + (((mlp->input_layer->neurons[j])->a) * ((mlp->input_layer->neurons[j])->weights[i]));
-
-    result = result + b;
-
-    setActivationNeuron(mlp->hidden_layers[0]->neurons[i], result);
-    result = 0.0;
-
-  }
-  //as camadas escondidas restantes começando da segunda camada k = 1
-  for(k = 1; k< mlp->num_hiddens;k++){
-    for(i = 0; i < mlp->size_hidden;i++){
-      b = (mlp->hidden_layers[k - 1]->bias->a) * (mlp->hidden_layers[k -1]->bias->weights[i]);
-
-      for(j = 0; j < mlp->size_hidden;j++)
-        result = result + (((mlp->hidden_layers[k -1]->neurons[j])->a) * ((mlp->hidden_layers[k -1]->neurons[j])->weights[i]));
-
-      result = result + b;
-
-      setActivationNeuron(mlp->hidden_layers[k]->neurons[i], result);
-      result = 0.0;
-
-    }
-  }
-  k = mlp->num_hiddens -1;
-  //camada de saída
-  for(i = 0; i < mlp->size_out;i++){
-    b = (mlp->hidden_layers[k]->bias->a) * (mlp->hidden_layers[k]->bias->weights[i]);
-
-    for(j = 0; j < mlp->size_hidden;j++)
-     result = result + (((mlp->hidden_layers[k]->neurons[j])->a) * ((mlp->hidden_layers[k]->neurons[j])->weights[i]));
+    for(j = 0; j < back_layer->size;j++)
+      result = result + (((back_layer->neurons[j])->a) * ((back_layer->neurons[j])->weights[i]));
 
     result = result + b;
 
-    setActivationNeuron(mlp->output_layer->neurons[i], result);
+    setActivationNeuron(current_layer->neurons[i], result);
     result = 0.0;
+
   }
 
 }
+
+void forwardPropagation(MLP *mlp){
+  int i, k;
+
+  //Primeira camada escondida
+  layerForwardPropagation(mlp->input_layer,mlp->hidden_layers[0]);
+
+  //as camadas escondidas restantes começando da segunda camada k = 1
+  for(i = 1; i < mlp->num_hiddens; i++)
+    layerForwardPropagation(mlp->hidden_layers[i - 1], mlp->hidden_layers[i]);
+  k = (mlp->num_hiddens) - 1;
+  layerForwardPropagation(mlp->hidden_layers[k], mlp->output_layer);
+
+}
+
+// void forwardPropagation(MLP *mlp){
+//   int i,j, k;
+//   double result = 0.0, b = 0.0;
+//
+//   //primeira camada escondida
+//   for(i = 0; i < mlp->size_hidden;i++){
+//     b = (mlp->input_layer->bias->a) * (mlp->input_layer->bias->weights[i]);
+//
+//     for(j = 0; j < mlp->size_in;j++)
+//       result = result + (((mlp->input_layer->neurons[j])->a) * ((mlp->input_layer->neurons[j])->weights[i]));
+//
+//     result = result + b;
+//
+//     setActivationNeuron(mlp->hidden_layers[0]->neurons[i], result);
+//     result = 0.0;
+//
+//   }
+//   //as camadas escondidas restantes começando da segunda camada k = 1
+//   for(k = 1; k< mlp->num_hiddens;k++){
+//     for(i = 0; i < mlp->size_hidden;i++){
+//       b = (mlp->hidden_layers[k - 1]->bias->a) * (mlp->hidden_layers[k -1]->bias->weights[i]);
+//
+//       for(j = 0; j < mlp->size_hidden;j++)
+//         result = result + (((mlp->hidden_layers[k -1]->neurons[j])->a) * ((mlp->hidden_layers[k -1]->neurons[j])->weights[i]));
+//
+//       result = result + b;
+//
+//       setActivationNeuron(mlp->hidden_layers[k]->neurons[i], result);
+//       result = 0.0;
+//
+//     }
+//   }
+//   k = mlp->num_hiddens -1;
+//   //camada de saída
+//   for(i = 0; i < mlp->size_out;i++){
+//     b = (mlp->hidden_layers[k]->bias->a) * (mlp->hidden_layers[k]->bias->weights[i]);
+//
+//     for(j = 0; j < mlp->size_hidden;j++)
+//      result = result + (((mlp->hidden_layers[k]->neurons[j])->a) * ((mlp->hidden_layers[k]->neurons[j])->weights[i]));
+//
+//     result = result + b;
+//
+//     setActivationNeuron(mlp->output_layer->neurons[i], result);
+//     result = 0.0;
+//   }
+//
+// }
 
 main() {
   int i;
