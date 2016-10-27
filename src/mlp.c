@@ -3,6 +3,7 @@
 
 #include "../include/mlp.h"
 #include "../include/openMatrixFile.h"
+#include "../include/activationFunctions.h"
 
 Neuron *initNeuronRandom(int links, double a){
   Neuron *new;
@@ -111,17 +112,16 @@ void setWeigthsNeuron(Neuron *n, double *values){
 }
 
 void printNeuron(Neuron *n){
-  printf("%2.3f\n\n",n->a);
+  printf("%.8f\n\n",n->a);
 }
 
 
 void printNeuronWeights(Neuron *n){
   int i;
-  printf("-----------------------\n");
-  for(i = 0;i < n->num_weigths;i++)
-    printf("%2.3f ",n->weights[i]);
 
-  printf("\n-----------------------\n");
+  for(i = 0;i < n->num_weigths;i++)
+    printf("%.8f ",n->weights[i]);
+  printf("\n\n");
 
 }
 
@@ -135,26 +135,31 @@ void setLayer(Layer *l, double *values){
 
 void printLayer(Layer *l){
   int i;
-  printf("----------------------------\n");
-  printf("bias ");
+  printf("bias -> ");
   printNeuron(l->bias);
-  for(i = 0;i < l->size;i++)
+  for(i = 0;i < l->size;i++){
+    printf("%d -> ",i);
     printNeuron(l->neurons[i]);
-  printf("----------------------------\n");
+  }
+
 }
 
 
 void printLayerWeights(Layer *l){
   int i;
-  printf("\n--------------Bias---------\n");
+  printf("\nBias-> ");
   printNeuronWeights(l->bias);
-  for(i = 0;i < l->size;i++)
+  for(i = 0;i < l->size;i++){
+    printf("%d -> ",i );
     printNeuronWeights(l->neurons[i]);
-  printf("\n--------------End---------\n");
+  }
+
+  printf("\n");
 }
 
 void printValuesMLP(MLP *mlp){
   int i;
+  printf("\n--------MLP VALUES---------\n");
   printf("\n--------InputLayer---------\n");
   printLayer(mlp->input_layer);
 
@@ -164,6 +169,21 @@ void printValuesMLP(MLP *mlp){
 
   printf("\n------OutputLayer---------\n");
     printLayer(mlp->output_layer);
+  printf("\n---------End---------------\n");
+}
+
+void printWeightsMLP(MLP *mlp){
+  int i;
+  printf("\n--------MLP WEIGHTS---------\n");
+  printf("\n--------InputLayer---------\n");
+  printLayerWeights(mlp->input_layer);
+
+  printf("\n------HiddenLayers---------\n");
+  for(i = 0; i < mlp->num_hiddens; i++)
+    printLayerWeights(mlp->hidden_layers[i]);
+
+  printf("\n------OutputLayer---------\n");
+    printLayerWeights(mlp->output_layer);
   printf("\n---------End---------------\n");
 }
 
@@ -178,7 +198,7 @@ void layerForwardPropagation(Layer *back_layer, Layer *current_layer){
     for(j = 0; j < back_layer->size;j++)
       result = result + (((back_layer->neurons[j])->a) * ((back_layer->neurons[j])->weights[i]));
 
-    result = result + b;
+    result = sigmoid(result + b);
 
     setActivationNeuron(current_layer->neurons[i], result);
     result = 0.0;
@@ -186,6 +206,26 @@ void layerForwardPropagation(Layer *back_layer, Layer *current_layer){
   }
 
 }
+
+// void linearFunctionOut(Layer *back_layer, Layer *current_layer){
+//   int i,j, k;
+//   double result = 0.0, b = 0.0;
+//
+//   //camada forwardPropagation
+//   for(i = 0; i < current_layer->size;i++){
+//     b = (back_layer->bias->a) * (back_layer->bias->weights[i]);
+//
+//     for(j = 0; j < back_layer->size;j++)
+//       result = result + (((back_layer->neurons[j])->a) * ((back_layer->neurons[j])->weights[i]));
+//
+//     result = result + b;
+//
+//     setActivationNeuron(current_layer->neurons[i], result);
+//     result = 0.0;
+//
+//   }
+//
+// }
 
 void forwardPropagation(MLP *mlp){
   int i, k;
@@ -249,11 +289,18 @@ void forwardPropagation(MLP *mlp){
 //
 // }
 
-void backPropagation(MLP *mlp){
+
+
+void backPropagation(MLP *mlp, double **mat, double *grad){
   int i;
-  for(i = 0; i < M; i++){
+
+  for(i = 0; i < 3; i++){
+    setLayer(mlp->input_layer,mat[i]);
+    forwardPropagation(mlp);
+    //printValuesMLP(mlp);
 
   }
+
 
 }
 
@@ -261,13 +308,17 @@ main() {
   int i;
 
   double **mat = createMatrix(NUM_ROWS, NUM_COLUMNS);
+  double *grad = createVector(SIZE_GRADIENT);
   MLP *mlp = initMLP(SIZE_INPUT, SIZE_OUTPUT, SIZE_HIDDEN, NUM_HIDDENS);
-
-
   readFileMatrix(mat, NUM_ROWS, NUM_COLUMNS);
+//  backPropagation(mlp,mat,grad);
+
+
   setLayer(mlp->input_layer,mat[0]);
+
   forwardPropagation(mlp);
   //printLayerWeights(mlp->input_layer);
+  //printWeightsMLP(mlp);
   printValuesMLP(mlp);
   //printMatrix(mat, NUM_ROWS, NUM_COLUMNS);
 

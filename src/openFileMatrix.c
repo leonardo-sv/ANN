@@ -17,6 +17,14 @@ double** createMatrix(int rows, int columns){
   }
   return m;
 }
+double *createVector(int tam){
+  int i;
+  double *v = malloc(sizeof(double) * tam);
+    for (i = 0; i < tam; i++){
+      v[i] = 0;
+    }
+  return v;
+}
 
 void freeMatrix(double **mat, int rows){
   int i;
